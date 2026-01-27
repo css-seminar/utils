@@ -22,6 +22,11 @@ assignment_paths = {'Prepare (Basic)': 'prepare/basic.md',
 'Exit Ticket': 'reflect/exit.md',
 'Talk Reflection': 'reflect/debreif.md',}
 
+banch_names = {'Prepare (Basic)': 'prepare',
+'Prepare (Advanced)': 'prepare',
+'Exit Ticket': 'reflect',
+'Talk Reflection': 'reflect',}
+
 template_types = assignment_paths.keys()
 
 
@@ -56,4 +61,4 @@ def acbranch(type):
     '''
     create assignment branch and PR for the given type and date
     '''
-    click.echo(assignment_paths.get(type))
+    click.echo(banch_names.get(type))
