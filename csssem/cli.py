@@ -26,10 +26,10 @@ template_types = assignment_paths.keys()
 
 
 @csssem_util.command()
-@click.option('--type', 'assignment_type', default='prepare',
+@click.option('-t', '--type', default='prepare',
                 help='type can be ' + ', '.join(template_types) , 
                 required=True)
-@click.option('--date', default=None, required=True,
+@click.option('-d','--date', default=None, required=True,
                 help='date should be YYYY-MM-DD of the relevant seminar')
 @click.option('--out_path', default=None, required=False,
                 help='path to save the file; default current directory')    
