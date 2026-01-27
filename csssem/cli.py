@@ -49,3 +49,11 @@ def gettemplatefile(type,date,out_path):
     with open(out_path,'w') as f:
         f.write(template_content)
 
+@csssem_util.command()
+@click.argument('type', type=click.Choice(template_types))
+
+def acbranch(type):
+    '''
+    create assignment branch and PR for the given type and date
+    '''
+    click.echo(assignment_paths.get(type))
