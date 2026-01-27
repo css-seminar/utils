@@ -33,7 +33,7 @@ template_types = assignment_paths.keys()
                 help='date should be YYYY-MM-DD of the relevant seminar')
 @click.option('--out_path', default=None, required=False,
                 help='path to save the file; default current directory')    
-def getstemplatefile(type,date,out_path):
+def gettemplatefile(type,date,out_path):
     '''
     get template file for activity from the course website repo
     '''
