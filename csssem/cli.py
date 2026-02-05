@@ -46,6 +46,7 @@ def gettemplatefile(type,date,out_path):
     relative_path = assignment_paths.get(type)
     file_url = f"{BASE_URL}/{relative_path}"
     # load file from base url
+    click.echo(file_url)
     template_content = requests.get(file_url).text
 
     if not(out_path):

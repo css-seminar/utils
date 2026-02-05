@@ -3,7 +3,7 @@ from datetime import date as dt
 from datetime import timedelta
 # UPDATE: update this each semester
 REPO = 'http://css-seminar.github.io/'
-BASE_URL = 'https://raw.githubusercontent.com/css-seminar/css-seminar.github.io/main/_'
+BASE_URL = 'https://raw.githubusercontent.com/css-seminar/css-seminar.github.io/main'
 
 
 GH_APPROVERS = ['brownsarahm']
