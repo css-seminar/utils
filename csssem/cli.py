@@ -19,8 +19,8 @@ def csssem_util():
 
 assignment_paths = {'Prepare (Basic)': 'prepare/basic.md',
 'Prepare (Advanced)': 'prepare/advanced.md',
-'Exit Ticket': 'reflect/exit.md',
-'Talk Reflection': 'reflect/debreif.md',}
+'Exit Ticket': 'reflection/exit.md',
+'Talk Reflection': 'reflection/debreif.md',}
 
 banch_names = {'Prepare (Basic)': 'prepare',
 'Prepare (Advanced)': 'prepare',
@@ -63,3 +63,16 @@ def acbranch(type):
     create assignment branch and PR for the given type and date
     '''
     click.echo(banch_names.get(type))
+
+
+grade_files = ['attendance','prepare','reflect']
+@csssem_util.command()
+@click.argument('type', type=click.Choice(grade_files)) 
+@click.argument('rating') 
+def eval(type,event, rating):
+    '''
+    evaluate submissions for the given date and type
+    '''
+    file_name = type + '.csv'
+    with open(file_name,'a') as f:
+        f.write(f"{event},{rating}\n")
