@@ -9,6 +9,7 @@ import pandas as pd
 
 from .config import GH_APPROVERS, BASE_URL
 
+repo_prefix = "reflection-sp26-"
 
 @click.group()
 def csssem_util():
@@ -78,20 +79,21 @@ def eval(type,event, rating):
     evaluate submissions for the given date and type
     '''
     file_name = type + '.csv'
-    with open(file_name,'a') as f:
+    path = os.path.join('.grades',file_name)
+    with open(path,'a') as f:
         f.write(f"{event},{rating}\n")
 
 
-summary_tamplate = '''
+summary_template = '''
 # Grade Summary
 
+*Last updated: {date}*
 
-This will be automatically updated periodically.  When it is updated, it will include a timestamp. 
-
-Any work done after that timestamp will not be reflected. 
-
+Any work done after the timestamp above is not reflected below
 
 You cannot edit the files in this folder. The csvs are where the instructor records evaluations. 
+
+For more details on the grading criteria, see the [course website](https://css-seminar.github.io/).
 
 ## Preparation
 
@@ -109,24 +111,36 @@ You need to earn 10 present, active or excused ratings to pass.
 You need to earn 24 units of reflction and synthesis to pass.  
 
 SO far you have earned {calc_reflect} units
+
+
 '''
 
 @csssem_util.command()
+@click.option('-w','--write', is_flag=True, 
+              help='write to a file instead of printing to console')
 
-def calculateprogress():
+def gengradereport(write):
     '''
     calculate progress for  student based on graded items
     '''
-    df_prep = pd.read_csv('.grades/preparation.csv')
-    df_attendance = pd.read_csv('.grades/attendance.csv')
+    df_prep = pd.read_csv('.grades/preparation.csv').rename(lambda x: x.strip(),axis=1)
+    df_attendance = pd.read_csv('.grades/attendance.csv').rename(lambda x: x.strip(),axis=1)
 
     calc_prep = df_prep['rating'].value_counts().to_markdown()
     calc_attendance = df_attendance['rating'].value_counts().to_markdown()
 
-    df_reflect = pd.read_csv('.grades/reflection.csv')
+    df_reflect = pd.read_csv('.grades/reflection.csv').rename(lambda x: x.strip(),axis=1)
     calc_reflect = df_reflect['units'].sum()
 
-    click.echo(summary_tamplate.format(calc_prep=calc_prep, calc_attendance=calc_attendance, calc_reflect=calc_reflect))
+    report = summary_template.format(calc_prep=calc_prep,
+                                        calc_attendance=calc_attendance, 
+                                        calc_reflect=calc_reflect,
+                                        date=date.today().isoformat() )
+    if write:
+        with open('.grades/README.md','w') as f:
+            f.write(report)
+    else: 
+        click.echo(report)
 
 
 index_col = {'attendance': 'date', 'prepare': 'date', 'reflection': 'activity'}
@@ -152,6 +166,21 @@ def resolveevals(type):
     if df.index.has_duplicates:
         click.echo(f"Warning: there are duplicate entries for {type} evaluations. Please resolve manually.")
     
+
+def attendance(current_attendance_file):
+    '''
+    post attendance to each student from csv for the current week
+    '''
+    df = pd.read_csv(current_attendance_file).replace('late','present')
+    cur_date = df.columns[1]
+    for _, row in df.iterrows():
+        student_gh = row['github']
+        rating = row[cur_date]
+        click.echo(f"Posting attendance for {student_gh} as {rating}")
+        student_attendance_path = os.path.join(repo_prefix+student_gh,'.grades',"attendance.csv")
+        with open(student_attendance_path,'a') as f:
+            f.write(f"{cur_date},{rating}\n")
+
 
 
 def updateaction():
