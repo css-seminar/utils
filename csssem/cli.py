@@ -22,7 +22,7 @@ def csssem_util():
 assignment_paths = {'Prepare (Basic)': 'prepare/basic.md',
 'Prepare (Advanced)': 'prepare/advanced.md',
 'Exit Ticket': 'reflection/exit.md',
-'Talk Reflection': 'reflection/debreif.md',}
+'Talk Reflection': 'reflection/deep.md',}
 
 banch_names = {'Prepare (Basic)': 'prepare',
 'Prepare (Advanced)': 'prepare',
@@ -70,9 +70,10 @@ def acbranch(type):
     click.echo(banch_names.get(type))
 
 
-grade_files = ['attendance','prepare','reflect']
+grade_files = ['attendance','preparation','reflection']
 @csssem_util.command()
 @click.argument('type', type=click.Choice(grade_files)) 
+@click.argument('event')
 @click.argument('rating') 
 def eval(type,event, rating):
     '''
@@ -81,7 +82,56 @@ def eval(type,event, rating):
     file_name = type + '.csv'
     path = os.path.join('.grades',file_name)
     with open(path,'a') as f:
-        f.write(f"{event},{rating}\n")
+        f.write(f"\n{event},{rating}")
+
+    # show diff for the change
+    subprocess.run(['git','diff',path])
+
+    # confirm change
+    commit = click.confirm('Do you want to commit this change?')
+    if not commit:
+        click.echo("Aborting commit. Change is saved locally but not committed.")
+        return
+    
+    
+    #commit change with message    
+    subprocess.run(['git','add',path])
+    subprocess.run(['git','commit','-m',f"add {type} evaluation for {event}"])
+
+    # confirm push
+    push = click.confirm('Do you want to push this change to remote?')
+    if push:
+        subprocess.run(['git','push'])
+    else:
+        return
+    
+    # pr comment?
+    comment = click.confirm('Do you want to comment on the PR for this branch?')  
+    if comment:
+        pr_comment = click.prompt('Enter your comment')
+    else:
+        pr_comment = ""
+        
+
+    # confirm approving PR
+    approve = click.confirm('Do you want to approve the PR for this branch?')  
+    if approve:
+        # approve PR via gh cli with comment
+        subprocess.run(['gh','pr','review','--approve','--body',pr_comment])
+    else:
+        # confirm request changes on PR
+        request_changes = click.confirm('Do you want to request changes to the PR for this branch?')
+        if request_changes:
+            # get change request comment
+            if not pr_comment:
+                pr_comment = click.prompt('Comments are required for change requests. Enter your comment')
+            # request changes via gh cli with comment
+            subprocess.run(['gh','pr','review','--request-changes','--body',pr_comment])
+        else:
+            if pr_comment:
+                subprocess.run(['gh','pr','comment','--body',pr_comment])
+    
+    
 
 
 summary_template = '''
@@ -166,7 +216,8 @@ def resolveevals(type):
     if df.index.has_duplicates:
         click.echo(f"Warning: there are duplicate entries for {type} evaluations. Please resolve manually.")
     
-
+@csssem_util.command()
+@click.argument('current_attendance_file', type=click.Path(exists=True))
 def attendance(current_attendance_file):
     '''
     post attendance to each student from csv for the current week
@@ -177,9 +228,9 @@ def attendance(current_attendance_file):
         student_gh = row['github']
         rating = row[cur_date]
         click.echo(f"Posting attendance for {student_gh} as {rating}")
-        student_attendance_path = os.path.join(repo_prefix+student_gh,'.grades',"attendance.csv")
+        student_attendance_path = os.path.join(repo_prefix+student_gh.strip(),'.grades',"attendance.csv")
         with open(student_attendance_path,'a') as f:
-            f.write(f"{cur_date},{rating}\n")
+            f.write(f"\n{cur_date},{rating}")
 
 
 
